@@ -4,13 +4,14 @@ import { useState, useMemo, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { SMERecord } from "@/lib/types";
 import { filterRecords, aggregateData } from "@/lib/analytics";
-import { KHMER_MONTHS } from "@/lib/sheets";
+import { DashboardYear } from "@/lib/sheets";
 import { StatsCards } from "./StatsCards";
 import { Filters } from "./Filters";
 
 interface Props {
   records: SMERecord[];
   uniqueValues: Record<string, string[]>;
+  year: DashboardYear;
 }
 
 function FilterSkeleton() {
@@ -45,7 +46,7 @@ const Charts = dynamic(() => import("./Charts").then((mod) => mod.Charts), {
   loading: ChartsSkeleton,
 });
 
-export function DashboardClient({ records, uniqueValues }: Props) {
+export function DashboardClient({ records, uniqueValues, year }: Props) {
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
   const [filters, setFilters] = useState<Record<string, string[]>>({});
 
@@ -74,7 +75,7 @@ export function DashboardClient({ records, uniqueValues }: Props) {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <header className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-primary">
-          ការចុះបញ្ជី SME ឆ្នាំ 2026
+          ការចុះបញ្ជី SME ឆ្នាំ {year}
         </h1>
         <p className="text-gray-500 mt-1 text-sm sm:text-base">
           តាមដានចំនួនអាជីវកម្មខ្នាតតូច និងមធ្យមដែលបានចុះបញ្ជីជារៀងរាល់ខែ
@@ -103,8 +104,8 @@ export function DashboardClient({ records, uniqueValues }: Props) {
       </Suspense>
 
       <footer className="mt-8 text-center text-sm text-gray-400 border-t pt-4">
-        <p>ទិន្នន័យផ្ទាល់ពី Google Sheets • {records.length} កំណត់ត្រាសរុប • ធ្វើបច្ចុប្បន្នភាពរៀងរាល់ 5 នាទីម្តង</p>
-        <p className="mt-1">Data streamed from Google Sheets — Last updated in real-time</p>
+        <p>ទិន្នន័យផ្ទាល់ពី Google Sheets • {records.length} កំណត់ត្រាសរុប • ធ្វើបច្ចុប្បន្នភាពរៀងរាល់ 1 ម៉ោង</p>
+        <p className="mt-1">Data from Google Sheets — refreshes every hour</p>
       </footer>
     </div>
   );

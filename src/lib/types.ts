@@ -27,6 +27,7 @@ export interface SMERecord {
   other: string;
   month: string;
   monthIndex: number;
+  year: number;
 }
 
 export interface MonthInfo {

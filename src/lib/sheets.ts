@@ -1,6 +1,16 @@
 import { SMERecord, MonthInfo } from "./types";
 
-const SHEET_ID = "1n1lKfUryI2saaYbgbET2MU-z1ax6tp4CIM8uFYxquEU";
+export const AVAILABLE_YEARS = [2026, 2025] as const;
+export type DashboardYear = (typeof AVAILABLE_YEARS)[number];
+
+const SHEET_IDS: Record<DashboardYear, string> = {
+  2026: "1n1lKfUryI2saaYbgbET2MU-z1ax6tp4CIM8uFYxquEU",
+  2025: "1ulj7uzSqT207tNgOK1wD4X2DwlWnoFZsVHOEPEpBOIc",
+};
+
+// Google Sheets values change infrequently; an hourly refresh keeps the dashboard
+// current without re-fetching every tab on every page view.
+const REVALIDATE_SECONDS = 3600;
 
 export const KHMER_MONTHS: MonthInfo[] = [
   { khmer: "មករា", english: "January", index: 0 },
@@ -63,7 +73,7 @@ function isHeaderRow(cols: string[]): boolean {
   return false;
 }
 
-function parseSheetCSV(csvText: string, month: string, monthIndex: number): SMERecord[] {
+function parseSheetCSV(csvText: string, month: string, monthIndex: number, year: number): SMERecord[] {
   const lines = csvText.replace(/\r\n/g, "\n").split("\n").filter((l) => l.trim());
   if (lines.length < 2) return [];
 
@@ -109,22 +119,24 @@ function parseSheetCSV(csvText: string, month: string, monthIndex: number): SMER
       other: cols[25] || "",
       month,
       monthIndex,
+      year,
     });
   }
   return records;
 }
 
-async function fetchSheetTab(sheetName: string, monthIndex: number): Promise<SMERecord[]> {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-  const res = await fetch(url, { next: { revalidate: 300 } });
+async function fetchSheetTab(sheetId: string, sheetName: string, monthIndex: number, year: number): Promise<SMERecord[]> {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  const res = await fetch(url, { next: { revalidate: REVALIDATE_SECONDS } });
   if (!res.ok) return [];
   const text = await res.text();
-  return parseSheetCSV(text, sheetName, monthIndex);
+  return parseSheetCSV(text, sheetName, monthIndex, year);
 }
 
-export async function fetchAllMonthsData(): Promise<SMERecord[]> {
+export async function fetchAllMonthsData(year: DashboardYear): Promise<SMERecord[]> {
+  const sheetId = SHEET_IDS[year];
   const results = await Promise.all(
-    KHMER_MONTHS.map((m) => fetchSheetTab(m.khmer, m.index))
+    KHMER_MONTHS.map((m) => fetchSheetTab(sheetId, m.khmer, m.index, year))
   );
   return results.flat();
 }
