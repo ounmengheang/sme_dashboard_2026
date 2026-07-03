@@ -29,17 +29,10 @@ function StatsSkeleton() {
 
 function ChartsSkeleton() {
   return (
-    <div className="mb-6">
-      <div className="flex gap-2 mb-5">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="skeleton h-9 w-32 rounded-xl" />
-        ))}
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="skeleton h-72" />
-        ))}
-      </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="skeleton h-72" />
+      ))}
     </div>
   );
 }

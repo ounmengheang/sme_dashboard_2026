@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { AggregatedData } from "@/lib/types";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -43,18 +42,17 @@ function ChartCard({ title, subtitle, children }: { title: string; subtitle?: st
   );
 }
 
-const TABS = [
-  { key: "overview", label: "ទិដ្ឋភាពទូទៅ", sub: "Overview", icon: LayoutGrid },
-  { key: "people", label: "ប្រជាសាស្ត្រ", sub: "People", icon: Users },
-  { key: "location", label: "ភូមិសាស្ត្រ", sub: "Location", icon: MapPin },
-  { key: "business", label: "អាជីវកម្ម", sub: "Business", icon: Briefcase },
-] as const;
-
-type TabKey = (typeof TABS)[number]["key"];
+function SectionHeading({ icon: Icon, label, sub }: { icon: any; label: string; sub: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-4 mt-8 first:mt-0">
+      <Icon className="w-4 h-4 text-primary" />
+      <h2 className="text-sm font-semibold text-gray-700">{label}</h2>
+      <span className="text-xs text-gray-400">· {sub}</span>
+    </div>
+  );
+}
 
 export function Charts({ aggregated }: Props) {
-  const [tab, setTab] = useState<TabKey>("overview");
-
   const topProvinces = Object.entries(aggregated.byProvince)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 10)
@@ -76,174 +74,148 @@ export function Charts({ aggregated }: Props) {
 
   return (
     <div className="mb-6">
-      <div className="flex flex-wrap gap-2 mb-5">
-        {TABS.map((t) => {
-          const Icon = t.icon;
-          const active = tab === t.key;
-          return (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-colors border ${
-                active
-                  ? "bg-primary text-white border-primary shadow-sm"
-                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {t.label}
-              <span className={active ? "text-white/70" : "text-gray-400"}>· {t.sub}</span>
-            </button>
-          );
-        })}
+      <SectionHeading icon={LayoutGrid} label="ទិដ្ឋភាពទូទៅ" sub="Overview" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ChartCard title="ការចុះបញ្ជីតាមខែ" subtitle="Registrations by Month">
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={aggregated.byMonthDetail}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <Tooltip content={<CustomTooltip />} />
+              <Line type="monotone" dataKey="count" stroke="#2251f5" strokeWidth={2.5} dot={{ fill: "#2251f5", r: 4 }} name="ចំនួន" />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="ទំហំសហគ្រាស" subtitle="Enterprise Size">
+          <ResponsiveContainer width="100%" height={280}>
+            <PieChart>
+              <Pie data={sizeData} cx="50%" cy="45%" innerRadius={55} outerRadius={90} dataKey="value">
+                {sizeData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend formatter={legendFormatter} wrapperStyle={{ fontSize: 12 }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="ស្ថានភាពចុះបញ្ជី" subtitle="Registration Status">
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={statusData} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis type="number" tick={{ fontSize: 11 }} />
+              <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11 }} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="value" fill="#8b5cf6" radius={[0, 4, 4, 0]} name="ចំនួន" />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </div>
 
-      {tab === "overview" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="ការចុះបញ្ជីតាមខែ" subtitle="Registrations by Month">
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={aggregated.byMonthDetail}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Line type="monotone" dataKey="count" stroke="#2251f5" strokeWidth={2.5} dot={{ fill: "#2251f5", r: 4 }} name="ចំនួន" />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartCard>
+      <SectionHeading icon={Users} label="ប្រជាសាស្ត្រ" sub="People" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ChartCard title="ការចែកចាយភេទ" subtitle="Gender Distribution">
+          <ResponsiveContainer width="100%" height={280}>
+            <PieChart>
+              <Pie data={genderData} cx="50%" cy="45%" innerRadius={55} outerRadius={90} dataKey="value">
+                {genderData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend formatter={legendFormatter} wrapperStyle={{ fontSize: 12 }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-          <ChartCard title="ទំហំសហគ្រាស" subtitle="Enterprise Size">
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie data={sizeData} cx="50%" cy="45%" innerRadius={55} outerRadius={90} dataKey="value">
-                  {sizeData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend formatter={legendFormatter} wrapperStyle={{ fontSize: 12 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartCard>
+        <ChartCard title="ជនជាតិ" subtitle="Nationality">
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={nationalityData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="value" fill="#10b981" radius={[4, 4, 0, 0]} name="ចំនួន" />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-          <ChartCard title="ស្ថានភាពចុះបញ្ជី" subtitle="Registration Status">
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={statusData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="#8b5cf6" radius={[0, 4, 4, 0]} name="ចំនួន" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
-      )}
+        <ChartCard title="ស្ថិតិពលកម្ម" subtitle="Worker Statistics (per business)">
+          <div className="grid grid-cols-4 gap-3 pt-4">
+            {[
+              { label: "មធ្យម", sub: "Avg", value: aggregated.workerStats.avg, color: "text-blue-600" },
+              { label: "មធ្យមកណ្ដាល", sub: "Median", value: aggregated.workerStats.median, color: "text-emerald-600" },
+              { label: "តិចបំផុត", sub: "Min", value: aggregated.workerStats.min, color: "text-amber-600" },
+              { label: "ច្រើនបំផុត", sub: "Max", value: aggregated.workerStats.max, color: "text-red-600" },
+            ].map((s) => (
+              <div key={s.label} className="text-center">
+                <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+                <p className="text-[11px] text-gray-400">{s.sub}</p>
+              </div>
+            ))}
+          </div>
+        </ChartCard>
+      </div>
 
-      {tab === "people" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="ការចែកចាយភេទ" subtitle="Gender Distribution">
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie data={genderData} cx="50%" cy="45%" innerRadius={55} outerRadius={90} dataKey="value">
-                  {genderData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend formatter={legendFormatter} wrapperStyle={{ fontSize: 12 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartCard>
+      <SectionHeading icon={MapPin} label="ភូមិសាស្ត្រ" sub="Location" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ChartCard title="ការចែកចាយតាមខេត្ត (កំពូល 10)" subtitle="Province Distribution (Top 10)">
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={topProvinces} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis type="number" tick={{ fontSize: 11 }} />
+              <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11 }} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="value" fill="#2251f5" radius={[0, 4, 4, 0]} name="ចំនួន" />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-          <ChartCard title="ជនជាតិ" subtitle="Nationality">
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={nationalityData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="#10b981" radius={[4, 4, 0, 0]} name="ចំនួន" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
+        <ChartCard title="ឧស្សាហកម្ម ISIC (កំពូល 10)" subtitle="ISIC Industries (Top 10)">
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={topIndustries} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis type="number" tick={{ fontSize: 11 }} />
+              <YAxis type="category" dataKey="name" width={60} tick={{ fontSize: 11 }} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="value" fill="#ec4899" radius={[0, 4, 4, 0]} name="ចំនួន" />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
 
-          <ChartCard title="ស្ថិតិពលកម្ម" subtitle="Worker Statistics (per business)">
-            <div className="grid grid-cols-4 gap-3 pt-4">
-              {[
-                { label: "មធ្យម", sub: "Avg", value: aggregated.workerStats.avg, color: "text-blue-600" },
-                { label: "មធ្យមកណ្ដាល", sub: "Median", value: aggregated.workerStats.median, color: "text-emerald-600" },
-                { label: "តិចបំផុត", sub: "Min", value: aggregated.workerStats.min, color: "text-amber-600" },
-                { label: "ច្រើនបំផុត", sub: "Max", value: aggregated.workerStats.max, color: "text-red-600" },
-              ].map((s) => (
-                <div key={s.label} className="text-center">
-                  <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-                  <p className="text-[11px] text-gray-400">{s.sub}</p>
-                </div>
-              ))}
-            </div>
-          </ChartCard>
-        </div>
-      )}
+      <SectionHeading icon={Briefcase} label="អាជីវកម្ម" sub="Business" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ChartCard title="បែបបទស្នើសុំ" subtitle="Application Method">
+          <ResponsiveContainer width="100%" height={280}>
+            <PieChart>
+              <Pie data={methodData} cx="50%" cy="45%" innerRadius={55} outerRadius={90} dataKey="value">
+                {methodData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend formatter={legendFormatter} wrapperStyle={{ fontSize: 12 }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-      {tab === "location" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="ការចែកចាយតាមខេត្ត (កំពូល 10)" subtitle="Province Distribution (Top 10)">
-            <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={topProvinces} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="#2251f5" radius={[0, 4, 4, 0]} name="ចំនួន" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-
-          <ChartCard title="ឧស្សាហកម្ម ISIC (កំពូល 10)" subtitle="ISIC Industries (Top 10)">
-            <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={topIndustries} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" width={60} tick={{ fontSize: 11 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="#ec4899" radius={[0, 4, 4, 0]} name="ចំនួន" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
-      )}
-
-      {tab === "business" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="បែបបទស្នើសុំ" subtitle="Application Method">
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie data={methodData} cx="50%" cy="45%" innerRadius={55} outerRadius={90} dataKey="value">
-                  {methodData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend formatter={legendFormatter} wrapperStyle={{ fontSize: 12 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartCard>
-
-          <ChartCard title="ការចែកចាយដើមទុន" subtitle="Capital Distribution (USD)">
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={aggregated.capitalDistribution}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="range" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} name="ចំនួន" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
-      )}
+        <ChartCard title="ការចែកចាយដើមទុន" subtitle="Capital Distribution (USD)">
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={aggregated.capitalDistribution}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="range" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} name="ចំនួន" />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
     </div>
   );
 }
