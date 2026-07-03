@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useMemo, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { SMERecord } from "@/lib/types";
 import { filterRecords, aggregateData } from "@/lib/analytics";
 import { KHMER_MONTHS } from "@/lib/sheets";
 import { StatsCards } from "./StatsCards";
-import { Charts } from "./Charts";
 import { Filters } from "./Filters";
 
 interface Props {
@@ -19,9 +19,9 @@ function FilterSkeleton() {
 
 function StatsSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="skeleton h-28" />
+        <div key={i} className="skeleton h-24" />
       ))}
     </div>
   );
@@ -29,13 +29,28 @@ function StatsSkeleton() {
 
 function ChartsSkeleton() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="skeleton h-72" />
-      ))}
+    <div className="mb-6">
+      <div className="flex gap-2 mb-5">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="skeleton h-9 w-32 rounded-xl" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="skeleton h-72" />
+        ))}
+      </div>
     </div>
   );
 }
+
+// Recharts' ResponsiveContainer measures a 0x0 container during server rendering, which
+// permanently breaks Pie chart sector generation on hydration. Loading charts client-only
+// avoids that mismatch.
+const Charts = dynamic(() => import("./Charts").then((mod) => mod.Charts), {
+  ssr: false,
+  loading: ChartsSkeleton,
+});
 
 export function DashboardClient({ records, uniqueValues }: Props) {
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
@@ -65,11 +80,14 @@ export function DashboardClient({ records, uniqueValues }: Props) {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <header className="mb-6">
-        <h1 className="text-3xl font-bold text-primary">
-          ផ្ទាំងគ្រប់គ្រងការចុះបញ្ជី SME ឆ្នាំ 2026
+        <h1 className="text-2xl sm:text-3xl font-bold text-primary">
+          ការចុះបញ្ជី SME ឆ្នាំ 2026
         </h1>
-        <p className="text-gray-500 mt-1">
-          SME Registration Dashboard 2026 — Live from Google Sheets
+        <p className="text-gray-500 mt-1 text-sm sm:text-base">
+          តាមដានចំនួនអាជីវកម្មខ្នាតតូច និងមធ្យមដែលបានចុះបញ្ជីជារៀងរាល់ខែ
+        </p>
+        <p className="text-gray-400 mt-0.5 text-xs sm:text-sm">
+          Track monthly SME registrations across Cambodia
         </p>
       </header>
 

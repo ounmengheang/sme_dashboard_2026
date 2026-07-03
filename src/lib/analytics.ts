@@ -74,6 +74,13 @@ export function aggregateData(records: SMERecord[]): AggregatedData {
     max: sortedWorkers.length ? sortedWorkers[sortedWorkers.length - 1] : 0,
   };
 
+  const avgCapital = capitals.length ? Math.round(capitals.reduce((a, b) => a + b, 0) / capitals.length) : 0;
+
+  const topProvinceEntry = Object.entries(byProvince)
+    .filter(([name]) => name)
+    .sort(([, a], [, b]) => b - a)[0];
+  const topProvince = topProvinceEntry ? { name: topProvinceEntry[0], count: topProvinceEntry[1] } : null;
+
   return {
     totalRegistrations: records.length,
     byGender,
@@ -87,6 +94,8 @@ export function aggregateData(records: SMERecord[]): AggregatedData {
     byMonthDetail,
     capitalDistribution,
     workerStats,
+    avgCapital,
+    topProvince,
   };
 }
 

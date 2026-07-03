@@ -66,4 +66,6 @@ export interface AggregatedData {
   byMonthDetail: { month: string; count: number }[];
   capitalDistribution: { range: string; count: number }[];
   workerStats: { avg: number; median: number; min: number; max: number };
+  avgCapital: number;
+  topProvince: { name: string; count: number } | null;
 }
