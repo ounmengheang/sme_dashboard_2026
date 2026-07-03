@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, GitCompare } from "lucide-react";
+import { BarChart3, GitCompare, Handshake } from "lucide-react";
 
 const LINKS = [
   { href: "/", label: "2026", sub: "ឆ្នាំ 2026", icon: BarChart3 },
   { href: "/2025", label: "2025", sub: "ឆ្នាំ 2025", icon: BarChart3 },
   { href: "/compare", label: "Compare", sub: "ប្រៀបធៀប", icon: GitCompare },
+  { href: "/matching", label: "Matching", sub: "ផ្គូផ្គង់អាជីវកម្ម", icon: Handshake },
 ];
 
 export function NavBar() {
